@@ -12,10 +12,11 @@ import (
 
 type set struct {
 	DB *gorm.DB
+	WG sync.WaitGroup
 }
 
 func main() {
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 	s := set{}
 	if err := s.getDBConnect(); err != nil {
 		panic(err)
@@ -30,19 +31,19 @@ func main() {
 
 	for i, tar := range *src {
 		log.Println("Main: Starting worker", i)
-		wg.Add(1)
-		go s.worker(tar, &wg)
+		s.WG.Add(1)
+		go s.worker(tar)
 	}
 
 	log.Println("Main: Waiting for workers to finish")
-	wg.Wait()
+	s.WG.Wait()
 	log.Println("Main: Completed")
 }
 
-func (s *set) worker(toTarget Source, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *set) worker(toTarget Source) {
+	defer s.WG.Done()
 
-	fmt.Println("Worker: Started")
+	log.Println("Worker: Started")
 	time.Sleep(time.Second * 2)
 	target := &Target{
 		UUID: toTarget.UUID,
@@ -51,8 +52,6 @@ func (s *set) worker(toTarget Source, wg *sync.WaitGroup) {
 
 	if err := s.DB.Create(&target).Error; err != nil {
 		log.Printf("error %+v", err.Error())
-	} else {
-		log.Printf("ok %+v", *target.Name)
 	}
 	log.Println("Worker: Finished")
 }
