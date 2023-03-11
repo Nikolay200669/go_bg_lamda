@@ -2,7 +2,7 @@
 
 ### TODO:
 
-- add lamda func
+- add lambda func
 - add flags configs
 - refactored `Sqlite` to `Mysql`
 - ...
